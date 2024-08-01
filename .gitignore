@@ -1,0 +1,10 @@
+# core
+.DS_Store
+node_modules
+.env
+.env*.local
+
+# other
+private-*/
+target
+private
