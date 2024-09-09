@@ -1,0 +1,35 @@
+
+dist
+.solid
+.output
+.vercel
+.netlify
+netlify
+.env
+.env.prod
+functions
+package-lock.json
+
+# dependencies
+/node_modules
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+*.launch
+.settings/
+
+# Temp
+gitignore
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Vite
+vite.config.ts.timestamp-*-*.mjs
+
+# Rust
+target/
+dump.rdb

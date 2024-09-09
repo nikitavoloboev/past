@@ -1,0 +1,50 @@
+{
+	"name": "@orbitkit/marketing",
+	"version": "0.1.4",
+	"private": true,
+	"description": "Marketing website for OrbitKit",
+	"license": "MIT",
+	"author": "OrbitKit",
+	"type": "module",
+	"scripts": {
+		"build": "astro check && astro build",
+		"dev": "astro dev",
+		"lint": "eslint . --cache --max-warnings 0",
+		"start": "astro preview",
+		"test:e2e": "playwright test",
+		"typecheck": "astro check"
+	},
+	"dependencies": {
+		"@astrojs/rss": "^4.0.5",
+		"@orbitkit/assets": "workspace:^",
+		"@orbitkit/env": "workspace:^",
+		"@orbitkit/ui": "workspace:^",
+		"@t3-oss/env-core": "^0.10.1",
+		"@total-typescript/ts-reset": "^0.5.1",
+		"astro": "^4.8.2",
+		"react": "^18.3.1",
+		"react-dom": "^18.3.1",
+		"zod": "^3.23.8"
+	},
+	"devDependencies": {
+		"@astrojs/check": "^0.6.0",
+		"@astrojs/mdx": "^3.0.0",
+		"@astrojs/react": "^3.3.4",
+		"@astrojs/sitemap": "^3.1.4",
+		"@astrojs/tailwind": "^5.1.0",
+		"@orbitkit/tailwind": "workspace:^",
+		"@orbitkit/tsconfig": "workspace:^",
+		"@playwright/test": "^1.44.0",
+		"@types/node": "^20.12.11",
+		"@types/react": "^18.3.2",
+		"@types/react-dom": "^18.3.0",
+		"autoprefixer": "^10.4.19",
+		"dotenv": "^16.4.5",
+		"eslint-config-orbitkit": "workspace:^",
+		"postcss": "^8.4.38",
+		"tailwindcss": "^3.4.3"
+	},
+	"volta": {
+		"extends": "../../package.json"
+	}
+}

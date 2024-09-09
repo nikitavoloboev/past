@@ -1,0 +1,7 @@
+query Stripe($plan: String!, $userId: ID!) {
+  user(by: { id: $userId }) {
+    stripe(plan: $plan) {
+      stripeCheckoutUrl
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "shiprn",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ]
+}

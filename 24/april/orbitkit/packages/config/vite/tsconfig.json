@@ -1,0 +1,12 @@
+{
+  "extends": ["@orbitkit/tsconfig/base.json"],
+  "compilerOptions": {
+    "tsBuildInfoFile": ".tsbuildinfo",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.cjs", "**/*.mjs", ".eslintrc.cjs"],
+  "exclude": ["dist", "node_modules"]
+}

@@ -1,0 +1,14 @@
+# core
+.DS_Store
+node_modules
+.env
+.env*.local
+
+# other
+private-*
+archived-*
+target
+private
+
+# repos
+24/july/knowledge

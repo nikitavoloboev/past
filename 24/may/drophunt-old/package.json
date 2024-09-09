@@ -1,0 +1,40 @@
+{
+  "name": "drophunt",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "tg": "cd telegram && bun dev",
+    "tunnel": "bun cmd.ts tunnel",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "seed": "bun --watch cli/seed.ts"
+  },
+  "dependencies": {
+    "@atlaskit/pragmatic-drag-and-drop": "^1.1.7",
+    "@legendapp/state": "^2.1.13",
+    "@libsql/client": "^0.6.0",
+    "@tiptap/extension-placeholder": "^2.4.0",
+    "@tiptap/react": "^2.4.0",
+    "@tiptap/starter-kit": "^2.4.0",
+    "framer-motion": "^11.2.0",
+    "next": "14.2.3",
+    "react": "^18",
+    "react-dom": "^18"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.2",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^9",
+    "eslint-config-next": "14.2.3",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5"
+  },
+  "prettier": {
+    "semi": false
+  }
+}
