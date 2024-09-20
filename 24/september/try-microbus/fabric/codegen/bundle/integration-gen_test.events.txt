@@ -1,0 +1,101 @@
+{{ $pkgSuffix := .PackageSuffix }}
+{{- range .Events }}
+{{- $t := .Signature.TestingT }}
+// {{ .Name }}TestCase assists in asserting the sink of {{ .Name }}.
+type {{ .Name }}TestCase struct {
+	_t *testing.T
+    _asserters []func()
+	_done chan bool
+	_triggered bool
+	ctx context.Context
+	{{- range .Signature.InputArgs }}
+	{{ .Name }} {{ .Type }}
+	{{- end }}
+	{{- range .Signature.OutputArgs }}
+	{{ .Name }} {{ .Type }}
+	{{- end }}
+	err error
+}
+
+// Expect asserts that the event sink was triggered with an exact match of its input arguments.
+func (_tc *{{ .Name }}TestCase) Expect({{ range $i, $e := .Signature.InputArgs }}{{ if $i }}, {{ end }}{{ .Name }} {{ .Type }}{{ end }}) *{{ .Name }}TestCase {
+	_tc._asserters = append(_tc._asserters, func() {
+		if testarossa.True(_tc._t, _tc._triggered, "Event sink was not triggered") {
+			{{- range .Signature.InputArgs }}
+			{{- if eq .Type "time.Time" }}
+			testarossa.True(_tc._t, {{ .Name }}.Equal(_tc.{{ .Name }}), "Expected %v, actual %v", {{ .Name }}, _tc.{{ .Name }})
+			{{- else }}
+			testarossa.Equal(_tc._t, {{ .Name }}, _tc.{{ .Name }})
+			{{- end }}{{ end }}
+		}
+	})
+	return _tc
+}
+
+// Assert asserts that the event sink was triggered with a custom function to assert its input arguments.
+func (_tc *{{ .Name }}TestCase) Assert(asserter func({{ $t }} *testing.T, {{ .In }})) *{{ .Name }}TestCase {
+	_tc._asserters = append(_tc._asserters, func() {
+		if testarossa.True(_tc._t, _tc._triggered, "Event sink was not triggered") {
+			asserter(_tc._t, _tc.ctx {{- range .Signature.InputArgs }}, _tc.{{ .Name }}{{ end }})
+		}
+	})
+	return _tc
+}
+
+// Return sets the values to return from the event sink to the event source.
+func (_tc *{{ .Name }}TestCase) Return({{ .Out }}) *{{ .Name }}TestCase {
+	{{- range .Signature.OutputArgs }}
+	_tc.{{ .Name }} = {{ .Name }}
+	{{- end }}
+	_tc.err = err
+	return _tc
+}
+
+// Wait waits for the event sink to be triggered. It is necessary to wait for events that are triggered asynchronously.
+func (_tc *{{ .Name }}TestCase) Wait() *{{ .Name }}TestCase {
+	timeout := 20 * time.Second
+	if deadline, ok := _tc._t.Deadline(); ok {
+		timeout = time.Until(deadline)
+	}
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
+	select {
+	case <-_tc._done:
+	case <-timer.C:
+		testarossa.True(_tc._t, false, "Timed out", "Event sink was not triggered")
+	}
+	return _tc
+}
+
+// {{ .Name }} creates a run-once event sink and returns the corresponding test case.
+func {{ .Name }}(t *testing.T) *{{ .Name }}TestCase {
+	_tc := &{{ .Name }}TestCase{
+		_t: t,
+		_done: make(chan bool),
+	}
+	con := connector.New("{{ .Name }}." + rand.AlphaNum64(12))
+	{{ $pkgSuffix }}api.NewHook(con).{{ .Name }}(func({{ .In }}) ({{ .Out }}) {
+		{{ $pkgSuffix }}api.NewHook(con).{{ .Name }}(nil)
+		_tc.ctx = ctx
+		{{- range .Signature.InputArgs }}
+		_tc.{{ .Name }} = {{ .Name }}
+		{{- end }}
+		_tc._triggered = true
+		close(_tc._done)
+		for _, asserter := range _tc._asserters {
+			asserter()
+		}
+		_tc._asserters = nil
+		return {{ range .Signature.OutputArgs }}_tc.{{ .Name }}, {{ end }}_tc.err
+	})
+	App.AddAndStartup(con)
+	_tc._t.Cleanup(func() {
+		con.Shutdown()
+		App.Remove(con)
+		for _, asserter := range _tc._asserters {
+			asserter()
+		}
+	})
+	return _tc
+}
+{{ end }}

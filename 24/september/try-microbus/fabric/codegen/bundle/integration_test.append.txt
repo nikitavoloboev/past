@@ -1,0 +1,84 @@
+{{- $pkg := CapitalizeIdentifier .PackageSuffix }}
+{{- range (JoinHandlers .Functions .Sinks) }}{{- if not .Exists }}
+{{- $t := .Signature.TestingT }}
+func Test{{ $pkg }}_{{ .Name }}(t *testing.T) {
+	t.Parallel()
+	/*
+		ctx := Context()
+		{{ .Name }}(t, ctx {{- range .Signature.InputArgs }}, {{ .Name }}{{ end }}).
+			{{- if .Signature.OutputArgs }}
+			Expect({{ range $i, $e := .Signature.OutputArgs }}{{ if $i }}, {{ end }}{{ .Name }}{{ end }})
+			{{- else }}
+			NoError()
+			{{- end }}
+	*/
+
+	// TO{{/**/}}DO: Test {{ .Name }}
+}
+{{ end }}{{ end }}
+
+{{- range .Events }}{{- if not .Exists }}
+{{- $t := .Signature.TestingT }}
+func Test{{ $pkg }}_{{ .Name }}(t *testing.T) {
+	// No parallel: event sinks might clash across tests
+	/*
+		ctx := Context()
+		tc := {{ .Name }}(t).
+			Expect({{ range $i, $e := .Signature.InputArgs }}{{ if $i }}, {{ end }}{{ .Name }}{{ end }}).
+			Return({{ range .Signature.OutputArgs }}{{ .Name }}, {{ end }}err)
+		...
+		tc.Wait()
+	*/
+
+	// TO{{/**/}}DO: Test {{ .Name }}
+}
+{{ end }}{{ end }}
+
+{{- range .Webs }}{{- if not .Exists }}
+func Test{{ $pkg }}_{{ .Name }}(t *testing.T) {
+	t.Parallel()
+	/*
+		ctx := Context()
+	{{- if eq .Method "ANY" }}
+		{{ .Name }}_Get(t, ctx, "").BodyContains(value)
+		{{ .Name }}_Post(t, ctx, "", "", body).BodyContains(value)
+		httpReq, _ := http.NewRequestWithContext(ctx, method, "?arg=val", body)
+		{{ .Name }}(t, httpReq).BodyContains(value)
+	{{- else if .MethodWithBody }}
+		{{ .Name }}(t, ctx, "", "", body).BodyContains(value)
+		httpReq, _ := http.NewRequestWithContext(ctx, method, "?arg=val", body)
+		{{ .Name }}_Do(t, httpReq).BodyContains(value)
+	{{- else }}
+		{{ .Name }}(t, ctx, "").BodyContains(value)
+		httpReq, _ := http.NewRequestWithContext(ctx, method, "?arg=val", body)
+		{{ .Name }}_Do(t, httpReq).BodyContains(value)
+	{{- end }}
+	*/
+
+	// TO{{/**/}}DO: Test {{ .Name }}
+}
+{{ end }}{{ end }}
+
+{{- range .Tickers }}{{ if not .Exists }}
+func Test{{ $pkg }}_{{ .Name }}(t *testing.T) {
+	t.Parallel()
+	/*
+		ctx := Context()
+		{{ .Name }}(t, ctx).NoError()
+	*/
+
+	// TO{{/**/}}DO: Test {{ .Name }}
+}
+{{ end }}{{ end }}
+
+{{- range .Configs }}{{ if .Callback }}{{ if not .Exists }}
+func Test{{ $pkg }}_OnChanged{{ .Name }}(t *testing.T) {
+	t.Parallel()
+	/*
+		ctx := Context()
+		OnChanged{{ .Name }}(t, ctx).NoError()
+	*/
+
+	// TO{{/**/}}DO: Test OnChanged{{ .Name }}
+}
+{{ end }}{{ end }}{{ end }}
