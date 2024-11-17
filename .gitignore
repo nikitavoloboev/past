@@ -16,3 +16,4 @@ private-*
 
 # archived repos (with .git history) are archived in https://github.com/past-nikiv and prefixed with archived- (so not included in this repo)
 archived-*
+try
