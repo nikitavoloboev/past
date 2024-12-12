@@ -1,0 +1,46 @@
+package {{ .PackageSuffix }}
+
+import (
+	"testing"
+
+	"github.com/microbus-io/testarossa"
+
+	"github.com/microbus-io/fabric/service"
+
+	"{{ .Package }}/{{ .PackageSuffix }}api"
+)
+
+var (
+	_ *testing.T
+	_ testarossa.TestingT
+	_ service.Service
+	_ *{{ .PackageSuffix }}api.Client
+)
+
+// Initialize starts up the testing app.
+func Initialize() (err error) {	
+	App.Init(func(svc service.Service) {
+		// Initialize all microservices
+	})
+
+	// Add microservices to the testing app
+	err = App.AddAndStartup(
+		// downstream.NewService().Init(func(svc *downstream.Service) {}),
+
+		Svc.Init(func(svc *Service) {
+			// Initialize the microservice under test
+			{{- range .Configs }}
+			// svc.Set{{ .Name }}({{ with index .Signature.OutputArgs 0 }}{{ .Name }}{{ end }})
+			{{- end}}
+		}),
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Terminate gets called after the testing app shut down.
+func Terminate() (err error) {
+	return nil
+}

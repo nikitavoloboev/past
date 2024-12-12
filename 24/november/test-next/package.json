@@ -1,0 +1,40 @@
+{
+	"name": "next",
+	"scripts": {
+		"dev": "bun web",
+		"web": "cd web && bun dev",
+		"web:build": "bun run --filter '*' build",
+		"api": "cd api && bun dev",
+		"cli": "bun run --watch cli/run.ts"
+	},
+	"devDependencies": {
+		"bun-types": "^1.1.26"
+	},
+	"workspaces": [
+		"web",
+		"api"
+	],
+	"prettier": {
+		"tailwindFunctions": [
+			"cn",
+			"cva"
+		],
+		"useTabs": true,
+		"semi": false,
+		"trailingComma": "none",
+		"printWidth": 120,
+		"arrowParens": "avoid"
+	},
+	"trustedDependencies": [
+		"@clerk/shared"
+	],
+	"private": true,
+	"dependencies": {
+		"browser-image-compression": "^2.0.2",
+		"clipboardy": "^4.0.0",
+		"heic2any": "^0.0.4",
+		"nanoid": "^5.0.7",
+		"react-hot-toast": "^2.4.1",
+		"tiny-encryptor": "^1.0.0"
+	}
+}

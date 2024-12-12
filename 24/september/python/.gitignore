@@ -1,0 +1,10 @@
+# core
+.DS_Store
+node_modules
+.env
+.env*.local
+# python
+.venv
+# other
+.idea
+lib/py-utils

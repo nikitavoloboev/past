@@ -1,0 +1,80 @@
+{{ range (JoinHandlers .Functions .Sinks) }}
+{{- $t := .Signature.TestingT }}
+// {{ .Name }}TestCase assists in asserting against the results of executing {{ .Name }}.
+type {{ .Name }}TestCase struct {
+	_t *testing.T
+	_dur time.Duration
+	{{- range .Signature.OutputArgs }}
+	{{ .Name }} {{ .Type }}
+	{{- end }}
+	err error
+}
+
+// Expect asserts no error and exact return values.
+func (_tc *{{ .Name }}TestCase) Expect({{ range $i, $e := .Signature.OutputArgs }}{{ if $i }}, {{ end }}{{ .Name }} {{ .Type }}{{ end }}) *{{ .Name }}TestCase {
+	{{- if .Signature.OutputArgs }}
+	if testarossa.NoError(_tc._t, _tc.err) {
+		{{- range .Signature.OutputArgs }}
+		{{- if eq .Type "time.Time" }}
+		testarossa.True(_tc._t, {{ .Name }}.Equal(_tc.{{ .Name }}), "Expected %v, actual %v", {{ .Name }}, _tc.{{ .Name }})
+		{{- else }}
+		testarossa.Equal(_tc._t, {{ .Name }}, _tc.{{ .Name }})
+		{{- end}}{{ end }}
+	}
+	{{- else }}
+	testarossa.NoError(_tc._t, _tc.err)
+	{{- end}}
+	return _tc
+}
+
+// Error asserts an error.
+func (tc *{{ .Name }}TestCase) Error(errContains string) *{{ .Name }}TestCase {
+	if testarossa.Error(tc._t, tc.err) {
+		testarossa.Contains(tc._t, tc.err.Error(), errContains)
+	}
+	return tc
+}
+
+// ErrorCode asserts an error by its status code.
+func (tc *{{ .Name }}TestCase) ErrorCode(statusCode int) *{{ .Name }}TestCase {
+	if testarossa.Error(tc._t, tc.err) {
+		testarossa.Equal(tc._t, statusCode, errors.StatusCode(tc.err))
+	}
+	return tc
+}
+
+// NoError asserts no error.
+func (tc *{{ .Name }}TestCase) NoError() *{{ .Name }}TestCase {
+	testarossa.NoError(tc._t, tc.err)
+	return tc
+}
+
+// CompletedIn checks that the duration of the operation is less than or equal the threshold.
+func (tc *{{ .Name }}TestCase) CompletedIn(threshold time.Duration) *{{ .Name }}TestCase {
+	testarossa.True(tc._t, tc._dur <= threshold)
+	return tc
+}
+
+// Assert asserts using a provided function.
+func (tc *{{ .Name }}TestCase) Assert(asserter func({{ $t }} *testing.T, {{ .Out }})) *{{ .Name }}TestCase {
+	asserter(tc._t, {{ range .Signature.OutputArgs }}tc.{{ .Name }}, {{ end }}tc.err)
+	return tc
+}
+
+// Get returns the result of executing {{ .Name }}.
+func (tc *{{ .Name }}TestCase) Get() ({{ .Out }}) {
+	return {{ range .Signature.OutputArgs }}tc.{{ .Name }}, {{ end }}tc.err
+}
+
+// {{ .Name }} executes the function and returns a corresponding test case.
+func {{ .Name }}({{ $t }} *testing.T, {{ .In }}) *{{ .Name }}TestCase {
+	tc := &{{ .Name }}TestCase{_t: {{ $t }}}
+	t0 := time.Now()
+	tc.err = utils.CatchPanic(func() error {
+		{{ range .Signature.OutputArgs }}tc.{{ .Name }}, {{ end }}tc.err = Svc.{{ .Name }}(ctx {{- range .Signature.InputArgs }}, {{ .Name }}{{ end }})
+		return tc.err
+	})
+	tc._dur = time.Since(t0)
+	return tc
+}
+{{ end }}

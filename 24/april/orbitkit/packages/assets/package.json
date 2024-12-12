@@ -1,0 +1,14 @@
+{
+  "name": "@orbitkit/assets",
+  "version": "0.1.2",
+  "private": true,
+  "description": "OrbitKit's assets package",
+  "license": "MIT",
+  "author": "OrbitKit",
+  "files": [
+    "**/*"
+  ],
+  "volta": {
+    "extends": "../../package.json"
+  }
+}
