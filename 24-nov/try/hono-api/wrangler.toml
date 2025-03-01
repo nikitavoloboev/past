@@ -1,0 +1,9 @@
+name = "hono-try"
+
+compatibility_date = "2024-04-01"
+compatibility_flags = ['nodejs_compat']
+assets = { directory = "public" }
+
+kv_namespaces = [
+  { binding = "hono-try", preview_id = "your-id", id = "your-id" },
+]
