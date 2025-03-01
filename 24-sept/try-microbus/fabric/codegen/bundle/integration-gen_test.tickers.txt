@@ -1,0 +1,58 @@
+{{ range .Tickers }}
+// {{ .Name }}TestCase assists in asserting against the results of executing {{ .Name }}.
+type {{ .Name }}TestCase struct {
+	t *testing.T
+	dur time.Duration
+	err error
+}
+
+// Error asserts an error.
+func (tc *{{ .Name }}TestCase) Error(errContains string) *{{ .Name }}TestCase {
+	if testarossa.Error(tc.t, tc.err) {
+		testarossa.Contains(tc.t, tc.err.Error(), errContains)
+	}
+	return tc
+}
+
+// ErrorCode asserts an error by its status code.
+func (tc *{{ .Name }}TestCase) ErrorCode(statusCode int) *{{ .Name }}TestCase {
+	if testarossa.Error(tc.t, tc.err) {
+		testarossa.Equal(tc.t, statusCode, errors.Convert(tc.err).StatusCode)
+	}
+	return tc
+}
+
+// NoError asserts no error.
+func (tc *{{ .Name }}TestCase) NoError() *{{ .Name }}TestCase {
+	testarossa.NoError(tc.t, tc.err)
+	return tc
+}
+
+// CompletedIn checks that the duration of the operation is less than or equal the threshold.
+func (tc *{{ .Name }}TestCase) CompletedIn(threshold time.Duration) *{{ .Name }}TestCase {
+	testarossa.True(tc.t, tc.dur <= threshold)
+	return tc
+}
+
+// Assert asserts using a provided function.
+func (tc *{{ .Name }}TestCase) Assert(asserter func(t *testing.T, err error)) *{{ .Name }}TestCase {
+	asserter(tc.t, tc.err)
+	return tc
+}
+
+// Get returns the result of executing {{ .Name }}.
+func (tc *{{ .Name }}TestCase) Get() (err error) {
+	return tc.err
+}
+
+// {{ .Name }} executes the ticker and returns a corresponding test case.
+func {{ .Name }}(t *testing.T, ctx context.Context) *{{ .Name }}TestCase {
+	tc := &{{ .Name }}TestCase{t: t}
+	t0 := time.Now()
+	tc.err = utils.CatchPanic(func() error {
+		return Svc.{{ .Name }}(ctx)
+	})
+	tc.dur = time.Since(t0)
+	return tc
+}
+{{ end }}

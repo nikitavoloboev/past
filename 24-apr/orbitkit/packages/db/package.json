@@ -1,0 +1,45 @@
+{
+  "name": "@orbitkit/db",
+  "version": "0.1.2",
+  "private": true,
+  "description": "A database package utilizing drizzle orm.",
+  "license": "MIT",
+  "author": "OrbitKit",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./env": "./src/env.js"
+  },
+  "scripts": {
+    "db:check": "dotenv -e ../../apps/web/.env.local drizzle-kit check:pg",
+    "db:generate": "dotenv -e ../../apps/web/.env.local drizzle-kit generate:pg",
+    "db:migrate": "dotenv -e ../../apps/web/.env.local tsx migrate.ts",
+    "db:migrate:drop": "dotenv -e ../../apps/web/.env.local drizzle-kit drop",
+    "db:pull": "dotenv -e ../../apps/web/.env.local drizzle-kit introspect:pg",
+    "db:push": "dotenv -e ../../apps/web/.env.local drizzle-kit push:pg",
+    "db:studio": "dotenv -e ../../apps/web/.env.local drizzle-kit studio",
+    "db:up": "dotenv -e ../../apps/web/.env.local drizzle-kit up:pg",
+    "lint": "eslint . --cache --max-warnings 0",
+    "typecheck": "tsc --noEmit --tsBuildInfoFile .tsbuildinfo"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.9.1",
+    "@orbitkit/env": "workspace:^",
+    "drizzle-orm": "^0.30.8",
+    "pg": "^8.11.5",
+    "postgres": "^3.4.4",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@orbitkit/tsconfig": "workspace:*",
+    "dotenv-cli": "^7.4.1",
+    "drizzle-kit": "^0.20.14",
+    "eslint-config-orbitkit": "workspace:*",
+    "tsx": "^4.7.2"
+  },
+  "volta": {
+    "extends": "../../package.json"
+  }
+}

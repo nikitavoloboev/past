@@ -1,0 +1,58 @@
+{{ $shortPackage := .PackageSuffix }}{{ range .Functions}}
+// do{{ .Name }} handles marshaling for the {{ .Name }} function.
+func (svc *Intermediate) do{{ .Name }}(w http.ResponseWriter, r *http.Request) error {
+	var i {{ $shortPackage }}api.{{ .Name }}In
+	var o {{ $shortPackage }}api.{{ .Name }}Out
+	{{- if .Signature.InputArg "httpRequestBody" }}
+	err := httpx.ParseRequestBody(r, &i.{{ CapitalizeIdentifier "httpRequestBody" }})
+	if err != nil {
+		return errors.Trace(err)
+	}
+	err = httpx.DecodeDeepObject(r.URL.Query(), &i)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	{{- else }}
+	err := httpx.ParseRequestData(r, &i)
+	if err != nil {
+		return errors.Trace(err)
+	}
+	{{- end }}
+	if strings.ContainsAny(`{{ .Path }}`, "{}") {
+		pathArgs, err := httpx.ExtractPathArguments(httpx.JoinHostAndPath("host", `{{ .Path }}`), r.URL.Path)
+		if err != nil {
+			return errors.Trace(err)
+		}
+		err = httpx.DecodeDeepObject(pathArgs, &i)
+		if err != nil {
+			return errors.Trace(err)
+		}
+	}
+	{{ range .Signature.OutputArgs }}o.{{ CapitalizeIdentifier .Name }}, {{ end }}err = svc.impl.{{ .Name }}(
+		r.Context(),
+		{{- range .Signature.InputArgs }}
+		i.{{ CapitalizeIdentifier .Name }},
+		{{- end}}
+	)
+	if err != nil {
+		return err // No trace
+	}
+	w.Header().Set("Content-Type", "application/json")
+	{{- if .Signature.OutputArg "httpStatusCode" }}
+	w.WriteHeader(o.{{ CapitalizeIdentifier "httpStatusCode" }})
+	{{- end}}
+	encoder := json.NewEncoder(w)
+	if svc.Deployment() == connector.LOCAL {
+		encoder.SetIndent("", "  ")
+	}
+	{{- if .Signature.OutputArg "httpResponseBody" }}
+	err = encoder.Encode(o.{{ CapitalizeIdentifier "httpResponseBody" }})
+	{{- else }}
+	err = encoder.Encode(o)
+	{{- end }}
+	if err != nil {
+		return errors.Trace(err)
+	}
+	return nil
+}
+{{ end}}

@@ -1,0 +1,218 @@
+{{ range (JoinHandlers .Functions .Events) }}
+// {{ .Name }}In are the input arguments of {{ .Name }}.
+type {{ .Name }}In struct {
+	{{- range .Signature.InputArgs }}
+	{{ CapitalizeIdentifier .Name }} {{ .Type }} `json:"{{ if eq .Name "httpRequestBody" }}-{{ else }}{{ .Name }}{{ end }}"`
+	{{- end }}
+}
+
+// {{ .Name }}Out are the return values of {{ .Name }}.
+type {{ .Name }}Out struct {
+	{{- range .Signature.OutputArgs }}
+	{{ CapitalizeIdentifier .Name }} {{ .Type }} `json:"{{ if eq .Name "httpStatusCode" }}-{{ else }}{{ .Name }}{{ end }}"`
+	{{- end }}
+}
+
+// {{ .Name }}Response is the response to {{ .Name }}.
+type {{ .Name }}Response struct {
+	data {{ .Name }}Out
+	HTTPResponse *http.Response
+	err error
+}
+
+// Get retrieves the return values.
+func (_out *{{ .Name }}Response) Get() ({{ .Out }}) {
+	{{- range .Signature.OutputArgs }}
+	{{ .Name }} = _out.data.{{ CapitalizeIdentifier .Name }}
+	{{- end }}
+	err = _out.err
+	return
+}
+
+/*
+{{ .Description }}
+*/
+func (_c *Multicast
+{{- if eq .Type "function" }}Client{{ else }}Trigger{{ end -}}
+) {{ .Name }}({{ .In }}) <-chan *{{ .Name }}Response {
+	_url := httpx.JoinHostAndPath(_c.host, `{{ .Path }}`)
+	_url = httpx.InsertPathArguments(_url, httpx.QArgs{
+		{{- range .Signature.InputArgs }}{{- if ne .Name "httpRequestBody" }}
+		`{{ .Name }}`: {{ .Name }},
+		{{- end }}{{ end }}
+	})
+	_in := {{ .Name }}In{
+		{{- range .Signature.InputArgs }}
+		{{ .Name }},
+		{{- end }}
+	}
+	{{- if not .MethodWithBody }}
+	_query, _err := httpx.EncodeDeepObject(_in)
+	if _err != nil {
+		_res := make(chan *{{ .Name }}Response, 1)
+		_res <- &{{ .Name }}Response{err: _err} // No trace
+		close(_res)
+		return _res
+	}
+	var _body any
+	{{- else if .Signature.InputArg "httpRequestBody" }}
+	_query, _err := httpx.EncodeDeepObject(_in)
+	if _err != nil {
+		_res := make(chan *{{ .Name }}Response, 1)
+		_res <- &{{ .Name }}Response{err: _err} // No trace
+		close(_res)
+		return _res
+	}
+	_body := httpRequestBody
+	{{- else }}
+	var _query url.Values
+	_body := _in
+	{{- end}}
+	_ch := _c.svc.Publish(
+		ctx,
+		pub.Method(`{{ if eq .Method "ANY" }}POST{{ else }}{{ .Method }}{{ end }}`),
+		pub.URL(_url),
+		pub.Query(_query),
+		pub.Body(_body),
+	)
+
+	_res := make(chan *{{ .Name }}Response, cap(_ch))
+	for _i := range _ch {
+		var _r {{ .Name }}Response
+		_httpRes, _err := _i.Get()
+		_r.HTTPResponse = _httpRes
+		if _err != nil {
+			_r.err = _err // No trace
+		} else {
+			_err = json.NewDecoder(_httpRes.Body).Decode(&(_r.data
+				{{- if .Signature.OutputArg "httpResponseBody" }}.HTTPResponseBody{{ end -}}
+			))
+			if _err != nil {
+				_r.err = errors.Trace(_err)
+			}
+			{{- if .Signature.OutputArg "httpStatusCode" }}
+			_r.data.HTTPStatusCode = _httpRes.StatusCode
+			{{- end}}
+		}
+		_res <- &_r
+	}
+	close(_res)
+	return _res
+}
+{{ if eq .Type "function" }}
+/*
+{{ .Description }}
+*/
+func (_c *Client) {{ .Name }}({{ .In }}) ({{ .Out }}) {
+	var _err error
+	_url := httpx.JoinHostAndPath(_c.host, `{{ .Path }}`)
+	_url = httpx.InsertPathArguments(_url, httpx.QArgs{
+		{{- range .Signature.InputArgs }}{{- if ne .Name "httpRequestBody" }}
+		`{{ .Name }}`: {{ .Name }},
+		{{- end }}{{ end }}
+	})
+	_in := {{ .Name }}In{
+		{{- range .Signature.InputArgs }}
+		{{ .Name }},
+		{{- end }}
+	}
+	{{- if not .MethodWithBody }}
+	_query, _err := httpx.EncodeDeepObject(_in)
+	if _err != nil {
+		err = _err // No trace
+		return
+	}
+	var _body any
+	{{- else if .Signature.InputArg "httpRequestBody" }}
+	_query, _err := httpx.EncodeDeepObject(_in)
+	if _err != nil {
+		err = _err // No trace
+		return
+	}
+	_body := httpRequestBody
+	{{- else }}
+	var _query url.Values
+	_body := _in
+	{{- end}}
+	_httpRes, _err := _c.svc.Request(
+		ctx,
+		pub.Method(`{{ if eq .Method "ANY" }}POST{{ else }}{{ .Method }}{{ end }}`),
+		pub.URL(_url),
+		pub.Query(_query),
+		pub.Body(_body),
+	)
+	if _err != nil {
+		err = _err // No trace
+		return
+	}
+	var _out {{ .Name }}Out
+	_err = json.NewDecoder(_httpRes.Body).Decode(&_out
+		{{- if .Signature.OutputArg "httpResponseBody" }}.HTTPResponseBody{{ end -}}
+	)
+	if _err != nil {
+		err = errors.Trace(_err)
+		return
+	}
+	{{- if .Signature.OutputArg "httpStatusCode" }}
+	_out.HTTPStatusCode = _httpRes.StatusCode
+	{{- end}}
+	{{- range .Signature.OutputArgs }}
+	{{ .Name }} = _out.{{ CapitalizeIdentifier .Name }}
+	{{- end }}
+	return
+}
+{{ else if eq .Type "event" }}
+/*
+{{ .Description }}
+*/
+func (_c *Hook) {{ .Name }}(handler func({{ .In }}) ({{ .Out }})) error {
+	do{{ .Name }} := func(w http.ResponseWriter, r *http.Request) error {
+		var i {{ .Name }}In
+		var o {{ .Name }}Out
+		{{- if .Signature.InputArg "httpRequestBody" }}
+		err := httpx.ParseRequestBody(r, &i.{{ CapitalizeIdentifier "httpRequestBody" }})
+		if err != nil {
+			return errors.Trace(err)
+		}
+		err = httpx.DecodeDeepObject(r.URL.Query(), &i)
+		if err != nil {
+			return errors.Trace(err)
+		}
+		{{- else }}
+		err := httpx.ParseRequestData(r, &i)
+		if err != nil {
+			return errors.Trace(err)
+		}
+		{{- end }}
+		{{ range .Signature.OutputArgs }}o.{{ CapitalizeIdentifier .Name }}, {{ end }}err = handler(
+			r.Context(),
+			{{- range .Signature.InputArgs }}
+			i.{{ CapitalizeIdentifier .Name }},
+			{{- end}}
+		)
+		if err != nil {
+			return err // No trace
+		}
+		w.Header().Set("Content-Type", "application/json")
+		{{- if .Signature.OutputArg "httpStatusCode" }}
+		w.WriteHeader(o.{{ CapitalizeIdentifier "httpStatusCode" }})
+		{{- end}}
+		encoder := json.NewEncoder(w)
+		{{- if .Signature.OutputArg "httpResponseBody" }}
+		err = encoder.Encode(o.{{ CapitalizeIdentifier "httpResponseBody" }})
+		{{- else }}
+		err = encoder.Encode(o)
+		{{- end }}
+		if err != nil {
+			return errors.Trace(err)
+		}
+		return nil
+	}
+	path := httpx.JoinHostAndPath(_c.host, `{{ .Path }}`)
+	if handler == nil {
+		return _c.svc.Unsubscribe(`{{ .Method }}`, path)
+	}
+	return _c.svc.Subscribe(`{{ .Method }}`, path, do{{ .Name }})
+}
+{{ end }}
+{{- end }}

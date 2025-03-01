@@ -1,0 +1,45 @@
+package {{ .PackageSuffix }}
+
+import (
+	"context"
+	"net/http"
+	"time"
+
+	"github.com/microbus-io/fabric/errors"
+
+	"{{ .Package }}/intermediate"
+	"{{ .Package }}/{{ .PackageSuffix }}api"
+)
+
+var (
+	_ context.Context
+	_ *http.Request
+	_ time.Duration
+	_ *errors.TracedError
+	_ *{{ .PackageSuffix }}api.Client
+)
+
+/*
+Service implements the {{ .General.Host }} microservice.
+{{- if .General.Description }}
+
+{{ .General.Description }}
+{{- end }}
+*/
+type Service struct {
+	*intermediate.Intermediate // DO NOT REMOVE
+
+	// TO{{/**/}}DO: Define microservice state variables
+}
+
+// OnStartup is called when the microservice is started up.
+func (svc *Service) OnStartup(ctx context.Context) (err error) {
+	// TO{{/**/}}DO: Implement OnStartup
+	return nil
+}
+
+// OnShutdown is called when the microservice is shut down.
+func (svc *Service) OnShutdown(ctx context.Context) (err error) {
+	// TO{{/**/}}DO: Implement OnShutdown
+	return nil
+}

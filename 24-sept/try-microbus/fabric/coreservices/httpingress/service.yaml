@@ -1,0 +1,289 @@
+# Copyright (c) 2023-2024 Microbus LLC and various contributors
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+# 	http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+# General
+#
+# host - The hostname of the microservice
+# description - A human-friendly description of the microservice
+# integrationTests - Whether or not to generate integration tests (defaults to true)
+# openApi - Whether or not to generate an OpenAPI document at openapi.json (defaults to true)
+general:
+  host: http.ingress.core
+  description: The HTTP ingress microservice relays incoming HTTP requests to the NATS bus.
+  openApi: false
+
+# Config properties
+#
+# signature - Func() (val Type)
+# description - Documentation
+# default - A default value (defaults to empty)
+# validation - A validation pattern
+#   str ^[a-zA-Z0-9]+$
+#   bool
+#   int [0,60]
+#   float [0.0,1.0)
+#   dur (0s,24h]
+#   set Red|Green|Blue
+#   url
+#   email
+#   json
+# callback - "true" to handle the change event (defaults to "false")
+# secret - "true" to indicate a secret (defaults to "false")
+configs:
+  - signature: TimeBudget() (budget time.Duration)
+    description: |-
+      TimeBudget specifies the timeout for handling a request, after it has been read.
+      A value of 0 or less indicates no time budget.
+    default: 20s
+    validation: dur [0s,]
+  - signature: Ports() (port string)
+    description: Ports is a comma-separated list of HTTP ports on which to listen for requests.
+    default: 8080
+    callback: true
+  - signature: RequestMemoryLimit() (megaBytes int)
+    description: RequestMemoryLimit is the memory capacity used to hold pending requests, in megabytes.
+    default: 4096
+    validation: int [1,]
+  - signature: AllowedOrigins() (origins string)
+    description: |-
+      AllowedOrigins is a comma-separated list of CORS origins to allow requests from.
+      The * origin can be used to allow CORS request from all origins.
+    default: "*"
+    callback: true
+  - signature: PortMappings() (mappings string)
+    description: |
+      PortMappings is a comma-separated list of mappings in the form x:y->z where x is the inbound
+      HTTP port, y is the requested NATS port, and z is the port to serve.
+      An HTTP request https://ingresshost:x/servicehost:y/path is mapped to internal NATS
+      request https://servicehost:z/path .
+      Both x and y can be * to indicate all ports. Setting z to * indicates to serve the requested
+      port y without change. Specific rules take precedence over * rules.
+      The default mapping grants access to all internal ports via HTTP port 8080 but restricts
+      HTTP ports 443 and 80 to only internal port 443.
+    default: 8080:*->*, 443:*->443, 80:*->443
+    callback: true
+  - signature: ReadTimeout() (timeout time.Duration)
+    description: ReadTimeout specifies the timeout for fully reading a request.
+    default: 5m
+    validation: dur [1s,]
+    callback: true
+  - signature: WriteTimeout() (timeout time.Duration)
+    description: WriteTimeout specifies the timeout for fully writing the response to a request.
+    default: 5m
+    validation: dur [1s,]
+    callback: true
+  - signature: ReadHeaderTimeout() (timeout time.Duration)
+    description: ReadHeaderTimeout specifies the timeout for fully reading the header of a request.
+    default: 20s
+    validation: dur [1s,]
+    callback: true
+  - signature: ServerLanguages() (languages string)
+    description: |-
+      ServerLanguages is a comma-separated list of languages that the server supports.
+      This list is matched against the Accept-Language header of the request.
+    callback: true
+  - signature: BlockedPaths() (blockedPaths string)
+    description: |-
+      A newline-separated list of paths or extensions to block with a 404.
+      Paths should not include any arguments and are matched exactly.
+      Extensions are specified with "*.ext" and are matched against the extension of the path only.
+    callback: true
+    default: |-
+      /geoserver
+      /console/
+      /.env
+      /.amazon_aws
+      /solr/admin/info/system
+      /remote/login
+      /Autodiscover/Autodiscover.xml
+      /autodiscover/autodiscover.json
+      /api/v2/static/not.found
+      /api/sonicos/tfa
+      /_ignition/execute-solution
+      /admin.html
+      /auth.html
+      /auth1.html
+      /readme.txt
+      /__Additional
+      /Portal0000.htm
+      /docs/cplugError.html/
+      /CSS/Miniweb.css
+      /scripts/WPnBr.dll
+      /.git/config
+      /cgi-bin/.%2e/.%2e/.%2e/.%2e/bin/sh
+      /cgi-bin/luci/;stok=/locale
+      /actuator/gateway/routes
+      /actuator/health
+      /Public/home/js/check.js
+      /mifs/.;/services/LogService
+      /dns-query
+      /ecp/Current/exporttool/microsoft.exchange.ediscovery.exporttool.application
+      /owa/auth/x.js
+      /static/admin/javascript/hetong.js
+      /.git/HEAD
+      /sslvpnLogin.html
+      /vpn/index.html
+      /wsman
+      /geoserver/web
+      /remote/logincheck
+      /epa/scripts/win/nsepa_setup.exe
+      /.well-known/security.txt
+      /cf_scripts/scripts/ajax/ckeditor/ckeditor.js
+      /Temporary_Listen_Addresses/
+      /manager/html
+      /logon/LogonPoint/custom.html
+      /logon/LogonPoint/index.html
+      /catalog-portal/ui/oauth/verify
+      /error_log/.git/HEAD
+      *.cfm
+      *.asp
+      *.aspx
+      *.cgi
+      *.jsa
+      *.jsp
+      *.shtml
+      *.php
+      *.jhtml
+      *.mwsl
+      *.dll
+      *.esp
+      *.exe
+
+# Functions
+#
+# signature - Go-style method signature
+#   Func(s string, f float64, i int, b bool) (t time.Time, d time.Duration)
+#   Func(val Complex, ptr *Complex)
+#   Func(m1 map[string]int, m2 map[string]*Complex) (a1 []int, a2 []*Complex)
+#   Func(httpRequestBody *Complex, queryArg int, pathArg string) (httpResponseBody []string, httpStatusCode int)
+# description - Documentation
+# method - "GET", "POST", etc. or "ANY" (default)
+# path - The URL path of the subscription, relative to the hostname of the microservice
+#   (empty) - The function name in kebab-case
+#   /path - Default port :443
+#   /directory/{filename+} - Greedy path argument
+#   /article/{aid}/comment/{cid} - Path arguments
+#   :443/path
+#   :443/... - Ellipsis denotes the function name in kebab-case
+#   :443 - Root path of the microservice
+#   :0/path - Any port
+#   //example.com:443/path
+#   https://example.com:443/path
+#   //root - Root path of the web server
+# queue - The subscription queue
+#   default - Load balanced (default)
+#   none - Pervasive
+# openApi - Whether or not to include this endpoint in the OpenAPI document (defaults to true)
+functions:
+  # - signature:
+  #   description:
+
+# Event sources
+#
+# signature - Go-style method signature
+#   OnEvent(s string, f float64, i int, b bool) (t time.Time, d time.Duration)
+#   OnEvent(val Complex, ptr *Complex)
+#   OnEvent(m1 map[string]int, m2 map[string]*Complex) (a1 []int, a2 []*Complex)
+#   OnEvent(httpRequestBody *Complex, queryArg int, pathArg string) (httpResponseBody []string, httpStatusCode int)
+# description - Documentation
+# method - "GET", "POST", etc. (defaults to "POST")
+# path - The URL path of the subscription, relative to the hostname of the microservice
+#   (empty) - The function name in kebab-case
+#   /path - Default port :417
+#   /directory/{filename+} - Greedy path argument
+#   /article/{aid}/comment/{cid} - Path arguments
+#   :417/path
+#   :417/... - Ellipsis denotes the function name in kebab-case
+#   :417 - Root path of the microservice
+#   //example.com:417/path
+#   https://example.com:417/path
+#   //root - Root path of the web server
+events:
+  # - signature:
+  #   description:
+
+# Event sinks
+#
+# signature - Go-style method signature
+#   OnEvent(s string, f float64, i int, b bool) (t time.Time, d time.Duration)
+#   OnEvent(val Complex, ptr *Complex)
+#   OnEvent(m1 map[string]int, m2 map[string]*Complex) (a1 []int, a2 []*Complex)
+#   OnEvent(httpRequestBody *Complex, queryArg int, pathArg string) (httpResponseBody []string, httpStatusCode int)
+# description - Documentation
+# event - The name of the event at the source (defaults to the function name)
+# source - The package path of the microservice that is the source of the event
+# forHost - For an event source with an overridden hostname
+# queue - The subscription queue
+#   default - Load balanced (default)
+#   none - Pervasive
+sinks:
+  # - signature:
+  #   description:
+  #   source: package/path/of/another/microservice
+
+# Web handlers
+#
+# signature - Go-style method signature (no arguments)
+#   Handler()
+# description - Documentation
+# method - "GET", "POST", etc. or "ANY" (default)
+# path - The URL path of the subscription, relative to the hostname of the microservice
+#   (empty) - The function name in kebab-case
+#   /path - Default port :443
+#   /directory/{filename+} - Greedy path argument
+#   /article/{aid}/comment/{cid} - Path arguments
+#   :443/path
+#   :443/... - Ellipsis denotes the function name in kebab-case
+#   :443 - Root path of the microservice
+#   :0/path - Any port
+#   //example.com:443/path
+#   https://example.com:443/path
+#   //root - Root path of the web server
+# queue - The subscription queue
+#   default - Load balanced (default)
+#   none - Pervasive
+# openApi - Whether or not to include this endpoint in the OpenAPI document (defaults to true)
+webs:
+  # - signature:
+  #   description:
+
+# Tickers
+#
+# signature - Go-style method signature (no arguments)
+#   Ticker()
+# description - Documentation
+# interval - Duration between iterations (e.g. 15m)
+tickers:
+  # - signature:
+  #   description:
+  #   interval:
+
+# Metrics
+#
+# signature - Go-style method signature (numeric measure, ...labels)
+#   RequestDurationSeconds(dur time.Duration, method string, success bool)
+#   MemoryUsageBytes(b int64)
+#   DistanceMiles(miles float64, countryCode int)
+#   RequestsCount(count int, domain string) - unit-less accumulating count
+#   CPUSecondsTotal(dur time.Duration) - accumulating count with unit
+#   See https://prometheus.io/docs/practices/naming/ for naming best practices
+# description - Documentation
+# kind - The kind of the metric, "counter" (default), "gauge" or "histogram"
+# buckets - Bucket boundaries for histograms [x,y,z,...]
+# alias - The name of the metric in Prometheus (defaults to package+function in snake_case)
+metrics:
+  # - signature:
+  #   description:
+  #   kind:

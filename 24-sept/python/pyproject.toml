@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "py"
+version = "0.0.1"
+description = ""
+authors = ["Nikita <github@nikiv.dev>"]
+readme = "readme.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+torch = "^2.4.0"
+torchvision = "^0.19.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

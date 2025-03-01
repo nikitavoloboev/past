@@ -1,0 +1,144 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+body {
+	/* height: 100%; */
+
+	background-color: #19191a;
+	font-family: 'Space Grotesk', sans-serif;
+	::-webkit-scrollbar {
+		width: 6px;
+	}
+
+	::-webkit-scrollbar-track {
+		background: transparent;
+
+	}
+
+	::-webkit-scrollbar-thumb {
+		background: #545454;
+		border-radius: 10px;
+
+
+	}
+
+	::-webkit-scrollbar-thumb:hover {
+		background: #fff;
+	}
+}
+
+.flex-grow::-webkit-scrollbar {
+	display: none;
+}
+
+.settings-icon {
+	transition: transform 1000ms ease;
+}
+
+.settings-icon:hover {
+	transform: rotate(360deg);
+}
+.tiptap p.is-editor-empty:first-child::before {
+  color: #adb5bd;
+  content: "";
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.scroll-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* *,
+*:before,
+*:after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+} */
+
+a {
+  text-decoration: none;
+}
+
+/* .nav-shadow {
+	box-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+
+}
+
+.nav-border {
+	border-bottom: 1px solid #cccccc30;
+} */
+/*
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: inherit;
+  font-weight: 500;
+  font-size: 18px;
+  letter-spacing: -0.03em;
+  padding: 6px;
+  border-bottom: 1px solid #ccc;
+  cursor: pointer;
+  text-transform: uppercase;
+} */
+
+/* .btn:hover {
+	border-bottom: 1px solid #b5e4fd;
+}
+
+	.svg-icon path {
+    fill: #fff;
+	}
+
+	.svg-icon {
+		transition: transform 0.3s ease-in-out;
+	}
+
+	.btn:hover .svg-icon {
+		transform: rotate(45deg);
+	}
+
+	.btn:hover .svg-icon path {
+		fill: #b5e4fd;
+	} */
+/*
+  &:before {
+    content: "";
+    background: #ccc;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 100%;
+    transition: 0.3s ease-in-out;
+    z-index: -1;
+    padding-bottom: 1px;
+    box-sizing: unset;
+  } */
+
+  /* &:hover:before {
+    width: 100%;
+  } */
+
+
+
+/* .glowing-border {
+  box-shadow: 0 0 8px 2px white;
+} */
+
+.backgroundPattern {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='12' viewBox='0 0 20 12'%3E%3Cg fill-rule='evenodd'%3E%3Cg id='charlie-brown' fill='%23000000' fill-opacity='0.4'%3E%3Cpath d='M9.8 12L0 2.2V.8l10 10 10-10v1.4L10.2 12h-.4zm-4 0L0 6.2V4.8L7.2 12H5.8zm8.4 0L20 6.2V4.8L12.8 12h1.4zM9.8 0l.2.2.2-.2h-.4zm-4 0L10 4.2 14.2 0h-1.4L10 2.8 7.2 0H5.8z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");}
+

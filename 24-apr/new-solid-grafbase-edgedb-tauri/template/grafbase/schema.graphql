@@ -1,0 +1,16 @@
+schema
+  @auth(
+    providers: [{ type: jwks, jwksEndpoint: "{{ env.HANKO_API_ENDPOINT }}" }]
+    rules: [{ allow: owner }]
+  ) {
+  query: Query
+}
+
+type StripePayload {
+  stripeCheckoutUrl: String!
+}
+
+type User @model {
+  username: String
+  stripe(plan: String!): StripePayload @resolver(name: "stripe")
+}

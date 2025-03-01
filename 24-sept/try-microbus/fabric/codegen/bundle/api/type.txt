@@ -1,0 +1,7 @@
+package {{ .PackageSuffix }}api
+
+// {{ .Name }}
+type {{ .Name }} struct {
+    // TO{{/**/}}DO: define fields of type {{ .Name }}
+    // Field int `json:"field,omitempty" jsonschema:"description=Number,example=7,default=0,required=true"`
+}

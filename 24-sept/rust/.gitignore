@@ -1,0 +1,14 @@
+# core
+.DS_Store
+node_modules
+.env
+.env*.local
+
+# other
+target/
+run/test.db
+seed
+bin/stdout-capture/output.txt
+lib/log-macro
+lib/rust-utils
+.idea

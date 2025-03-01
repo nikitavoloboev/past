@@ -1,0 +1,230 @@
+# Copyright (c) 2023-2024 Microbus LLC and various contributors
+# 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+# 	http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+---
+# General
+#
+# host - The hostname of the microservice
+# description - A human-friendly description of the microservice
+# integrationTests - Whether or not to generate integration tests (defaults to true)
+# openApi - Whether or not to generate an OpenAPI document at openapi.json (defaults to true)
+general:
+  host: codegen.test
+  description: The tester is used to test the code generator's functions.
+
+# Config properties
+#
+# signature - Func() (val Type)
+# description - Documentation
+# default - A default value (defaults to empty)
+# validation - A validation pattern
+#   str ^[a-zA-Z0-9]+$
+#   bool
+#   int [0,60]
+#   float [0.0,1.0)
+#   dur (0s,24h]
+#   set Red|Green|Blue
+#   url
+#   email
+#   json
+# callback - "true" to handle the change event (defaults to "false")
+# secret - "true" to indicate a secret (defaults to "false")
+configs:
+  # - signature:
+  #   description:
+  #   default:
+  #   validation:
+
+# Functions
+#
+# signature - Go-style method signature
+#   Func(s string, f float64, i int, b bool) (t time.Time, d time.Duration)
+#   Func(val Complex, ptr *Complex)
+#   Func(m1 map[string]int, m2 map[string]*Complex) (a1 []int, a2 []*Complex)
+#   Func(httpRequestBody *Complex, queryArg int, pathArg string) (httpResponseBody []string, httpStatusCode int)
+# description - Documentation
+# method - "GET", "POST", etc. or "ANY" (default)
+# path - The URL path of the subscription, relative to the hostname of the microservice
+#   (empty) - The function name in kebab-case
+#   /path - Default port :443
+#   /directory/{filename+} - Greedy path argument
+#   /article/{aid}/comment/{cid} - Path arguments
+#   :443/path
+#   :443/... - Ellipsis denotes the function name in kebab-case
+#   :443 - Root path of the microservice
+#   :0/path - Any port
+#   //example.com:443/path
+#   https://example.com:443/path
+#   //root - Root path of the web server
+# queue - The subscription queue
+#   default - Load balanced (default)
+#   none - Pervasive
+# openApi - Whether or not to include this endpoint in the OpenAPI document (defaults to true)
+functions:
+  # Typical arguments
+  - signature: StringCut(s string, sep string) (before string, after string, found bool)
+    description: StringCut tests a function that takes primitive input arguments and returns primitive values.
+  - signature: PointDistance(p1 XYCoord, p2 *XYCoord) (d float64)
+    description: PointDistance tests a function that takes non-primitive input arguments.
+    method: GET
+  - signature: ShiftPoint(p *XYCoord, x float64, y float64) (shifted *XYCoord)
+    description: ShiftPoint tests passing pointers of non-primitive types.
+  - signature: LinesIntersection(l1 XYLine, l2 *XYLine) (b bool)
+    description: LinesIntersection tests nested non-primitive types.
+  # HTTP arguments
+  - signature: SubArrayRange(httpRequestBody []int, min int, max int) (httpResponseBody []int, httpStatusCode int)
+    description: |
+      SubArrayRange tests sending arguments as the entire request and response bodies.
+      An httpRequestBody argument allows sending other arguments via query or path.
+      An httpResponseBody argument prevents returning additional values, except for the status code.
+    path: /sub-array-range/{max}
+  - signature: SumTwoIntegers(x int, y int) (sum int, httpStatusCode int)
+    description: SumTwoIntegers tests returning a status code from a function.
+  # Path arguments
+  - signature: FunctionPathArguments(named string, path2 string, suffix string) (joined string)
+    description: FunctionPathArguments tests path arguments in functions.
+    path: /.../fixed/{named}/{}/{suffix+}
+    method: GET
+  - signature: NonStringPathArguments(named int, path2 bool, suffix float64) (joined string)
+    description: NonStringPathArguments tests path arguments that are not strings.
+    path: /.../fixed/{named}/{}/{suffix+}
+    method: GET
+  - signature: UnnamedFunctionPathArguments(path1 string, path2 string, path3 string) (joined string)
+    description: UnnamedFunctionPathArguments tests path arguments that are not named.
+    path: /.../{}/foo/{}/bar/{+}
+    method: GET
+  - signature: PathArgumentsPriority(foo string) (echo string)
+    description: PathArgumentsPriority tests the priority of path arguments in functions.
+    path: /.../{foo}
+  # Manipulate context
+  - signature: WhatTimeIsIt() (t time.Time)
+    description: WhatTimeIsIt tests shifting the clock.
+
+# Event sources
+#
+# signature - Go-style method signature
+#   OnEvent(s string, f float64, i int, b bool) (t time.Time, d time.Duration)
+#   OnEvent(val Complex, ptr *Complex)
+#   OnEvent(m1 map[string]int, m2 map[string]*Complex) (a1 []int, a2 []*Complex)
+#   OnEvent(httpRequestBody *Complex, queryArg int, pathArg string) (httpResponseBody []string, httpStatusCode int)
+# description - Documentation
+# method - "GET", "POST", etc. (defaults to "POST")
+# path - The URL path of the subscription, relative to the hostname of the microservice
+#   (empty) - The function name in kebab-case
+#   /path - Default port :417
+#   /directory/{filename+} - Greedy path argument
+#   /article/{aid}/comment/{cid} - Path arguments
+#   :417/path
+#   :417/... - Ellipsis denotes the function name in kebab-case
+#   :417 - Root path of the microservice
+#   //example.com:417/path
+#   https://example.com:417/path
+#   //root - Root path of the web server
+events:
+  - signature: OnDiscovered(p XYCoord, n int) (q XYCoord, m int)
+    description: OnDiscovered tests firing events.
+    method: POST
+
+# Event sinks
+#
+# signature - Go-style method signature
+#   OnEvent(s string, f float64, i int, b bool) (t time.Time, d time.Duration)
+#   OnEvent(val Complex, ptr *Complex)
+#   OnEvent(m1 map[string]int, m2 map[string]*Complex) (a1 []int, a2 []*Complex)
+#   OnEvent(httpRequestBody *Complex, queryArg int, pathArg string) (httpResponseBody []string, httpStatusCode int)
+# description - Documentation
+# event - The name of the event at the source (defaults to the function name)
+# source - The package path of the microservice that is the source of the event
+# forHost - For an event source with an overridden hostname
+# queue - The subscription queue
+#   default - Load balanced (default)
+#   none - Pervasive
+sinks:
+  - signature: OnDiscoveredSink(p XYCoord, n int) (q XYCoord, m int)
+    event: OnDiscovered
+    description: OnDiscovered tests listening to events.
+    source: github.com/microbus-io/fabric/codegen/tester
+
+# Web handlers
+#
+# signature - Go-style method signature (no arguments)
+#   Handler()
+# description - Documentation
+# method - "GET", "POST", etc. or "ANY" (default)
+# path - The URL path of the subscription, relative to the hostname of the microservice
+#   (empty) - The function name in kebab-case
+#   /path - Default port :443
+#   /directory/{filename+} - Greedy path argument
+#   /article/{aid}/comment/{cid} - Path arguments
+#   :443/path
+#   :443/... - Ellipsis denotes the function name in kebab-case
+#   :443 - Root path of the microservice
+#   :0/path - Any port
+#   //example.com:443/path
+#   https://example.com:443/path
+#   //root - Root path of the web server
+# queue - The subscription queue
+#   default - Load balanced (default)
+#   none - Pervasive
+# openApi - Whether or not to include this endpoint in the OpenAPI document (defaults to true)
+webs:
+  # Typical case
+  - signature: Echo()
+    description: Echo tests a typical web handler.
+  - signature: MultiValueHeaders()
+    description: MultiValueHeaders tests a passing in and returning headers with multiple values.
+  # Path arguments
+  - signature: WebPathArguments()
+    description: WebPathArguments tests path arguments in web handlers.
+    path: /.../fixed/{named}/{}/{suffix+}
+  - signature: UnnamedWebPathArguments()
+    description: UnnamedWebPathArguments tests path arguments that are not named.
+    path: /.../{}/foo/{}/bar/{+}
+    method: GET
+  - signature: DirectoryServer()
+    description: DirectoryServer tests service resources given a greedy path argument.
+    path: /.../{filename+}
+    method: GET
+  # Manipulate context
+  - signature: Hello()
+    description: Hello prints hello in the language best matching the request's Accept-Language header.
+
+# Tickers
+#
+# signature - Go-style method signature (no arguments)
+#   Ticker()
+# description - Documentation
+# interval - Duration between iterations (e.g. 15m)
+tickers:
+  # - signature:
+  #   description:
+  #   interval:
+
+# Metrics
+#
+# signature - Go-style method signature (numeric measure, ...labels)
+#   RequestDurationSeconds(dur time.Duration, method string, success bool)
+#   MemoryUsageBytes(b int64)
+#   DistanceMiles(miles float64, countryCode int)
+#   RequestsCount(count int, domain string) - unit-less accumulating count
+#   CPUSecondsTotal(dur time.Duration) - accumulating count with unit
+#   See https://prometheus.io/docs/practices/naming/ for naming best practices
+# description - Documentation
+# kind - The kind of the metric, "counter" (default), "gauge" or "histogram"
+# buckets - Bucket boundaries for histograms [x,y,z,...]
+# alias - The name of the metric in Prometheus (defaults to package+function in snake_case)
+metrics:
+  # - signature:
+  #   description:
+  #   kind:
